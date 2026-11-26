@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Data Structure using C++ quiz</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F2F4F1; --surface: #FFFFFF; --ink: #172433; --muted: #586472; --line: #D3DAD4;
+  --pencil: #1F4E8C; --pencil-soft: #E3ECF7; --warn: #A6402A; --good: #2D7A4D; --good-soft: #E2F1E7;
+  --bad: #B3261E; --bad-soft: #F8E3E1; --code-bg: #F6F7F5;
+  --sans: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #11161C; --surface: #19212A; --ink: #E5E9ED; --muted: #9AA6B2; --line: #2C3742;
+    --pencil: #86B6EA; --pencil-soft: #1E3149; --warn: #F0937B; --good: #7CCB98; --good-soft: #17301F;
+    --bad: #F08F86; --bad-soft: #3A1D1B; --code-bg: #141A21;
+    color-scheme: dark;
+  }
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 17px/1.55 var(--sans); }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--pencil); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+/* ---------- sign-in ---------- */
+.signin { max-width: 460px; margin: 9vh auto 40px; padding: 0 20px; }
+.course { color: var(--muted); font-size: 15px; margin: 0 0 6px; }
+h1 { font-size: 34px; line-height: 1.15; font-weight: 600; margin: 0 0 18px; letter-spacing: -0.01em; }
+.rules { margin: 0 0 28px; color: var(--muted); }
+label { display: block; font-weight: 500; font-size: 15px; margin: 18px 0 6px; }
+input[type=text] { width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--surface); font-size: 17px; }
+input[type=text]:focus { border-color: var(--pencil); outline: none; box-shadow: 0 0 0 3px var(--pencil-soft); }
+.hint { font-size: 14px; color: var(--muted); margin-top: 4px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 22px; border-radius: 8px; border: 1.5px solid var(--ink); background: var(--ink); color: var(--bg); font-weight: 600; cursor: pointer; }
+.btn:disabled { opacity: .55; cursor: progress; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn.ghost:hover:not(:disabled) { border-color: var(--ink); }
+.signin .btn { width: 100%; margin-top: 28px; padding: 14px; font-size: 18px; }
+.msg { margin-top: 16px; padding: 12px 14px; border-radius: 8px; background: var(--bad-soft); color: var(--bad); font-size: 15px; }
+.msg.info { background: var(--pencil-soft); color: var(--pencil); }
+
+/* ---------- quiz header and timer ---------- */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+body.quiz-on::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.top .wrap { display: flex; align-items: center; gap: 16px; padding-top: 12px; padding-bottom: 12px; }
+.who { flex: 1; min-width: 0; font-size: 15px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.who strong { color: var(--ink); font-weight: 600; }
+.clock { font: 500 28px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.clock.low { color: var(--warn); }
+.drain { height: 5px; background: var(--line); }
+.drain i { display: block; height: 100%; width: 100%; background: var(--pencil); transform-origin: left; transition: transform .25s linear; }
+.drain.low i { background: var(--warn); }
+
+/* ---------- layout ---------- */
+.board { display: grid; grid-template-columns: minmax(0, 1fr) 248px; gap: 32px; padding-top: 28px; padding-bottom: 60px; align-items: start; }
+@media (max-width: 820px) { .board { grid-template-columns: 1fr; gap: 24px; } }
+
+.qhead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.qnum { font-weight: 600; font-size: 15px; }
+.qtopic { font-size: 14px; color: var(--muted); }
+.qtext { font-size: 21px; line-height: 1.45; font-weight: 500; margin: 0 0 18px; max-width: 46em; }
+pre.code { margin: 0 0 22px; padding: 16px 18px; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; font: 400 15px/1.6 var(--mono); tab-size: 4; }
+
+/* OMR-style options: the bubble fills in like pencil on an answer sheet */
+.opts { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; max-width: 46em; }
+.opt { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 12px 16px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface); cursor: pointer; }
+.opt:hover { border-color: var(--muted); }
+.bubble { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--muted); display: grid; place-items: center; font: 600 15px/1 var(--sans); color: var(--muted); transition: background .12s, border-color .12s, color .12s; }
+.opt-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.opt-text.mono { font-family: var(--mono); font-size: 15px; }
+.opt[aria-checked="true"] { border-color: var(--pencil); background: var(--pencil-soft); }
+.opt[aria-checked="true"] .bubble { background: var(--pencil); border-color: var(--pencil); color: var(--surface); }
+
+.nav { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
+.clear { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; padding: 12px 6px; margin-left: auto; font-size: 15px; }
+
+/* answer sheet */
+.sheet { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 84px); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+.sheet h2 { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+.sheet .count { font-size: 14px; color: var(--muted); margin: 0 0 14px; }
+.grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.cell { aspect-ratio: 1; border-radius: 50%; border: 1.5px solid var(--line); background: transparent; display: grid; place-items: center; font: 500 14px/1 var(--sans); cursor: pointer; }
+.cell.done { background: var(--pencil); border-color: var(--pencil); color: var(--surface); }
+.cell.here { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
+.sheet .btn { width: 100%; margin-top: 18px; }
+@media (max-width: 820px) { .sheet { position: static; } .grid { grid-template-columns: repeat(8, 1fr); } }
+
+/* dialog */
+.scrim { position: fixed; inset: 0; background: rgba(10, 16, 22, .55); display: grid; place-items: center; padding: 20px; z-index: 20; }
+.dialog { background: var(--surface); border-radius: 12px; padding: 24px; max-width: 420px; width: 100%; }
+.dialog h2 { margin: 0 0 8px; font-size: 21px; }
+.dialog p { margin: 0 0 20px; color: var(--muted); }
+.dialog .row { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* ---------- result ---------- */
+.result { padding-top: 40px; padding-bottom: 80px; max-width: 820px; }
+.score { display: flex; align-items: baseline; gap: 10px; margin: 6px 0 4px; }
+.score b { font: 600 72px/1 var(--sans); letter-spacing: -0.02em; }
+.score span { font-size: 26px; color: var(--muted); }
+.result .sub { color: var(--muted); margin: 0 0 36px; }
+.rv { border-top: 1px solid var(--line); padding: 24px 0; }
+.rv .qtext { font-size: 18px; }
+.rv .opt { cursor: default; }
+.rv .opt:hover { border-color: var(--line); }
+.rv .opt.right { border-color: var(--good); background: var(--good-soft); }
+.rv .opt.right .bubble { background: var(--good); border-color: var(--good); color: var(--surface); }
+.rv .opt.wrong { border-color: var(--bad); background: var(--bad-soft); }
+.rv .opt.wrong .bubble { background: var(--bad); border-color: var(--bad); color: var(--surface); }
+.tag { font-size: 13px; font-weight: 600; margin-left: auto; padding-left: 10px; white-space: nowrap; }
+.right .tag { color: var(--good); } .wrong .tag { color: var(--bad); }
+.verdict { font-weight: 600; font-size: 15px; }
+.verdict.ok { color: var(--good); } .verdict.no { color: var(--bad); } .verdict.skip { color: var(--muted); }
+.why { margin: 14px 0 0; padding-left: 14px; border-left: 3px solid var(--line); color: var(--muted); max-width: 46em; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<!-- ============ sign in ============ -->
+<main id="screen-signin" class="signin">
+  <p class="course">2025CSET201, SCSET, Bennett University</p>
+  <h1>Data Structure using C++ quiz</h1>
+  <p class="rules">15 questions in 15 minutes. You can go back and change answers until you submit. When the timer reaches zero, the quiz submits itself.</p>
+  <form id="signin-form" novalidate>
+    <label for="enrol">Enrollment number</label>
+    <input id="enrol" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+    <label for="name">Full name</label>
+    <input id="name" type="text" autocomplete="name" required>
+    <label for="batch">Batch number</label>
+    <input id="batch" type="text" autocomplete="off" required>
+    <p class="hint">Check your enrollment number carefully. You get one attempt.</p>
+    <button class="btn" id="start-btn" type="submit">Start quiz</button>
+  </form>
+  <div id="signin-msg" class="msg" role="alert" hidden></div>
+</main>
+
+<!-- ============ quiz ============ -->
+<div id="screen-quiz" hidden>
+  <header class="top">
+    <div class="wrap">
+      <div class="who" id="who"></div>
+      <div class="clock" id="clock" role="timer" aria-live="off">15:00</div>
+    </div>
+    <div class="drain" id="drain"><i id="drain-bar"></i></div>
+  </header>
+  <div class="wrap board">
+    <section aria-live="polite">
+      <div class="qhead"><span class="qnum" id="qnum"></span><span class="qtopic" id="qtopic"></span></div>
+      <p class="qtext" id="qtext"></p>
+      <pre class="code" id="qcode" hidden><code></code></pre>
+      <div class="opts" id="opts" role="radiogroup" aria-labelledby="qtext"></div>
+      <div class="nav">
+        <button class="btn ghost" id="prev" type="button">Previous</button>
+        <button class="btn ghost" id="next" type="button">Next</button>
+        <button class="clear" id="clear" type="button">Clear answer</button>
+      </div>
+    </section>
+    <aside class="sheet" aria-label="Answer sheet">
+      <h2>Answer sheet</h2>
+      <p class="count" id="count"></p>
+      <div class="grid" id="grid"></div>
+      <button class="btn" id="submit" type="button">Submit quiz</button>
+    </aside>
+  </div>
+</div>
+
+<div class="scrim" id="confirm" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <h2 id="confirm-title">Submit your quiz?</h2>
+    <p id="confirm-text"></p>
+    <div class="row">
+      <button class="btn ghost" id="confirm-no" type="button">Keep working</button>
+      <button class="btn" id="confirm-yes" type="button">Submit quiz</button>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="saving" hidden>
+  <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="saving-title">
+    <h2 id="saving-title">Submitting your quiz</h2>
+    <p id="saving-text">Saving your answers. Keep this page open.</p>
+    <div class="row"><button class="btn" id="saving-retry" type="button" hidden>Try again</button></div>
+  </div>
+</div>
+
+<!-- ============ result ============ -->
+<main id="screen-result" class="wrap result" hidden>
+  <p class="course" id="r-who"></p>
+  <div class="score"><b id="r-marks"></b><span id="r-out"></span></div>
+  <p class="sub" id="r-sub"></p>
+  <div id="r-list"></div>
+</main>
+
+<script>
+/* ===== Settings: paste your Apps Script web app URL here ===== */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbziqeFix9CmoqDFyFNwH7rrFQewDMBljYgfX_2xgSlH-OpobW4THfUOBci0EX9hPV09-A/exec";
+/* ============================================================= */
+
+const $ = id => document.getElementById(id);
+const LETTERS = "ABCD";
+let S = null;            // {enrol, name, batch, questions, durationSec}
+let answers = {};        // question id -> displayed option index
+let current = 0;
+let deadline = 0;        // performance.now() value when time is up
+let tick = null;
+let submitting = false;
+
+function show(id) {
+  ["screen-signin", "screen-quiz", "screen-result"].forEach(s => $(s).hidden = s !== id);
+  document.body.classList.toggle("quiz-on", id === "screen-quiz");
+  window.scrollTo(0, 0);
+}
+
+async function api(body) {
+  const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(body) });
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  return res.json();
+}
+
+function storeKey() { return "dsaquiz:" + S.enrol; }
+function save() {
+  try { localStorage.setItem(storeKey(), JSON.stringify({ answers, current })); } catch (e) {}
+}
+function restore() {
+  try {
+    const v = JSON.parse(localStorage.getItem(storeKey()) || "null");
+    if (v) { answers = v.answers || {}; current = Math.min(v.current || 0, S.questions.length - 1); }
+  } catch (e) {}
+}
+
+/* ---------- sign in ---------- */
+$("signin-form").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const msg = $("signin-msg");
+  msg.hidden = true; msg.className = "msg";
+  const enrol = $("enrol").value.toUpperCase().replace(/\s+/g, "");
+  const name = $("name").value.trim();
+  const batch = $("batch").value.trim();
+  if (!enrol || !name || !batch) { msg.textContent = "Fill in your enrollment number, name and batch number."; msg.hidden = false; return; }
+  if (SCRIPT_URL.startsWith("PASTE")) { msg.textContent = "This quiz is not connected yet. Ask your teacher to add the web app URL."; msg.hidden = false; return; }
+
+  const btn = $("start-btn");
+  btn.disabled = true; btn.textContent = "Loading your questions…";
+  try {
+    let r;
+    for (let i = 0; i < 4; i++) {
+      r = await api({ action: "start", enrol, name, batch });
+      if (r.status !== "busy") break;
+      await new Promise(res => setTimeout(res, 1500 * (i + 1)));
+    }
+    if (r.status === "ok") return begin(r);
+    if (r.status === "done") msg.textContent = `You have already submitted this quiz. Your score: ${r.marks} out of ${r.outOf}.`;
+    else if (r.status === "closed") { msg.className = "msg info"; msg.textContent = "The quiz is not open yet. Wait for your teacher to open it, then press Start quiz again."; }
+    else msg.textContent = r.message || "Something went wrong. Press Start quiz again.";
+  } catch (e) {
+    msg.textContent = "Couldn't reach the quiz server. Check your internet connection and press Start quiz again.";
+  }
+  msg.hidden = false;
+  btn.disabled = false; btn.textContent = "Start quiz";
+});
+
+/* ---------- quiz ---------- */
+function begin(r) {
+  S = r;
+  answers = {}; current = 0;
+  restore();
+  $("who").innerHTML = "";
+  const strong = document.createElement("strong"); strong.textContent = r.name;
+  $("who").append(strong, document.createTextNode(`, ${r.enrol}, Batch ${r.batch}`));
+  buildGrid();
+  render();
+  show("screen-quiz");
+  deadline = performance.now() + r.remainingSec * 1000;
+  clearInterval(tick);
+  tick = setInterval(updateClock, 250);
+  updateClock();
+  window.addEventListener("beforeunload", warnLeave);
+}
+
+function warnLeave(e) { if (!submitting) { e.preventDefault(); e.returnValue = ""; } }
+
+function updateClock() {
+  const left = Math.max(0, deadline - performance.now());
+  const s = Math.ceil(left / 1000);
+  $("clock").textContent = String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+  const low = s <= 120;
+  $("clock").classList.toggle("low", low);
+  $("drain").classList.toggle("low", low);
+  $("drain-bar").style.transform = `scaleX(${left / (S.durationSec * 1000)})`;
+  if (left <= 0) { clearInterval(tick); doSubmit(true); }
+}
+
+function buildGrid() {
+  const g = $("grid"); g.innerHTML = "";
+  S.questions.forEach((q, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "cell"; b.textContent = i + 1;
+    b.addEventListener("click", () => { current = i; save(); render(); });
+    g.append(b);
+  });
+}
+
+function looksLikeCode(t) { return /[;{}<>]|^\s*-?\d+(\s+-?\d+)*\s*$|\w\(/.test(t); }
+// Use the code font for a question's options only when all of them are code or numbers,
+// so one question never mixes two fonts.
+function monoOptions(q) { return q.type === "output" || q.options.every(looksLikeCode); }
+
+function render() {
+  const q = S.questions[current];
+  $("qnum").textContent = `Question ${current + 1} of ${S.questions.length}`;
+  $("qtopic").textContent = q.topic;
+  $("qtext").textContent = q.question;
+  const pre = $("qcode");
+  pre.hidden = !q.code;
+  pre.firstElementChild.textContent = q.code || "";
+  const box = $("opts"); box.innerHTML = "";
+  const mono = monoOptions(q);
+  q.options.forEach((o, k) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "opt"; b.setAttribute("role", "radio");
+    b.setAttribute("aria-checked", answers[q.id] === k ? "true" : "false");
+    const bub = document.createElement("span"); bub.className = "bubble"; bub.textContent = LETTERS[k]; bub.setAttribute("aria-hidden", "true");
+    const tx = document.createElement("span"); tx.className = "opt-text" + (mono ? " mono" : ""); tx.textContent = o;
+    b.append(bub, tx);
+    b.addEventListener("click", () => choose(k));
+    box.append(b);
+  });
+  $("prev").disabled = current === 0;
+  $("next").textContent = current === S.questions.length - 1 ? "Review answer sheet" : "Next";
+  $("clear").hidden = answers[q.id] === undefined;
+  const done = S.questions.filter(x => answers[x.id] !== undefined).length;
+  $("count").textContent = `${done} of ${S.questions.length} answered`;
+  [...$("grid").children].forEach((c, i) => {
+    const a = answers[S.questions[i].id] !== undefined;
+    c.classList.toggle("done", a);
+    c.classList.toggle("here", i === current);
+    c.setAttribute("aria-label", `Question ${i + 1}, ${a ? "answered" : "not answered"}`);
+  });
+}
+
+function choose(k) {
+  answers[S.questions[current].id] = k;
+  save(); render();
+}
+
+$("prev").addEventListener("click", () => { if (current > 0) { current--; save(); render(); } });
+$("next").addEventListener("click", () => {
+  if (current < S.questions.length - 1) { current++; save(); render(); }
+  else $("submit").focus();
+});
+$("clear").addEventListener("click", () => { delete answers[S.questions[current].id]; save(); render(); });
+
+document.addEventListener("keydown", e => {
+  if ($("screen-quiz").hidden || !$("confirm").hidden || !$("saving").hidden) return;
+  if (e.target.tagName === "INPUT") return;
+  const k = e.key.toUpperCase();
+  const q = S.questions[current];
+  const idx = "ABCD".indexOf(k) >= 0 ? "ABCD".indexOf(k) : "1234".indexOf(k);
+  if (idx >= 0 && idx < q.options.length) { choose(idx); e.preventDefault(); }
+  else if (e.key === "ArrowRight" && current < S.questions.length - 1) { current++; save(); render(); }
+  else if (e.key === "ArrowLeft" && current > 0) { current--; save(); render(); }
+});
+
+/* ---------- submit ---------- */
+$("submit").addEventListener("click", () => {
+  const left = S.questions.filter(x => answers[x.id] === undefined).length;
+  $("confirm-text").textContent = left
+    ? `You have ${left} unanswered question${left > 1 ? "s" : ""}. After you submit, you can't change your answers.`
+    : "All questions are answered. After you submit, you can't change your answers.";
+  $("confirm").hidden = false;
+  $("confirm-no").focus();
+});
+$("confirm-no").addEventListener("click", () => { $("confirm").hidden = true; });
+$("confirm-yes").addEventListener("click", () => { $("confirm").hidden = true; doSubmit(false); });
+$("saving-retry").addEventListener("click", () => { submitting = false; doSubmit(false); });
+
+async function doSubmit(auto) {
+  if (submitting) return;
+  submitting = true;
+  clearInterval(tick);
+  $("confirm").hidden = true;
+  $("saving").hidden = false;
+  $("saving-retry").hidden = true;
+  $("saving-title").textContent = auto ? "Time is up" : "Submitting your quiz";
+  $("saving-text").textContent = "Saving your answers. Keep this page open.";
+  for (let attempt = 0; attempt < 8; attempt++) {
+    try {
+      const r = await api({ action: "submit", enrol: S.enrol, answers });
+      if (r.status === "ok") { showResult(r); return; }
+      if (r.status !== "busy") throw new Error(r.message || "error");
+    } catch (e) { /* retry below */ }
+    $("saving-text").textContent = "Many students are submitting at once. Still trying, keep this page open.";
+    await new Promise(res => setTimeout(res, 2000 + attempt * 2000 + Math.random() * 1500));
+  }
+  $("saving-title").textContent = "Your answers are not submitted yet";
+  $("saving-text").textContent = "Couldn't reach the quiz server. Your answers are kept on this computer. Check the internet connection, then press Try again.";
+  $("saving-retry").hidden = false;
+  submitting = false;
+}
+
+/* ---------- result ---------- */
+function showResult(r) {
+  submitting = true;
+  window.removeEventListener("beforeunload", warnLeave);
+  try { localStorage.removeItem(storeKey()); } catch (e) {}
+  $("saving").hidden = true;
+  $("r-who").textContent = `${S.name}, ${S.enrol}, Batch ${S.batch}`;
+  $("r-marks").textContent = r.marks;
+  $("r-out").textContent = `out of ${r.outOf}`;
+  $("r-sub").textContent = "Your quiz is submitted. Review each question and the correct answer below.";
+  const list = $("r-list"); list.innerHTML = "";
+  r.review.forEach(q => {
+    const art = document.createElement("article"); art.className = "rv";
+    const head = document.createElement("div"); head.className = "qhead";
+    const n = document.createElement("span"); n.className = "qnum"; n.textContent = `Question ${q.number}`;
+    const v = document.createElement("span");
+    if (q.yours === null) { v.className = "verdict skip"; v.textContent = "Not answered"; }
+    else if (q.yours === q.correct) { v.className = "verdict ok"; v.textContent = "Correct"; }
+    else { v.className = "verdict no"; v.textContent = "Incorrect"; }
+    const t = document.createElement("span"); t.className = "qtopic"; t.textContent = q.topic;
+    head.append(n, v, t);
+    const p = document.createElement("p"); p.className = "qtext"; p.textContent = q.question;
+    art.append(head, p);
+    if (q.code) { const pre = document.createElement("pre"); pre.className = "code"; const c = document.createElement("code"); c.textContent = q.code; pre.append(c); art.append(pre); }
+    const opts = document.createElement("div"); opts.className = "opts";
+    const mono = monoOptions(q);
+    q.options.forEach((o, k) => {
+      const d = document.createElement("div"); d.className = "opt";
+      if (k === q.correct) d.classList.add("right");
+      else if (k === q.yours) d.classList.add("wrong");
+      const bub = document.createElement("span"); bub.className = "bubble"; bub.textContent = LETTERS[k];
+      const tx = document.createElement("span"); tx.className = "opt-text" + (mono ? " mono" : ""); tx.textContent = o;
+      d.append(bub, tx);
+      if (k === q.correct || k === q.yours) {
+        const tag = document.createElement("span"); tag.className = "tag";
+        tag.textContent = k === q.correct ? (k === q.yours ? "Your answer, correct" : "Correct answer") : "Your answer";
+        d.append(tag);
+      }
+      opts.append(d);
+    });
+    art.append(opts);
+    if (q.explanation) { const w = document.createElement("p"); w.className = "why"; w.textContent = q.explanation; art.append(w); }
+    list.append(art);
+  });
+  show("screen-result");
+}
+</script>
+</body>
+</html>
